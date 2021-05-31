@@ -857,8 +857,8 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-c', '--category_num', type=int, default=80,
-        help='number of object categories [80]')
+        '-c', '--category_num', type=int, default=8,
+        help='number of object categories [8]')
     parser.add_argument(
         '-m', '--model', type=str, required=True,
         help=('[yolov3|yolov3-tiny|yolov3-spp|yolov4|yolov4-tiny]-'

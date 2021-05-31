@@ -65,7 +65,7 @@ if trt.__version__[0] >= '7':
         1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
 
 
-def build_engine(onnx_file_path, category_num=80, verbose=False):
+def build_engine(onnx_file_path, category_num=8, verbose=False):
     """Build a TensorRT engine from an ONNX file."""
     TRT_LOGGER = trt.Logger(trt.Logger.VERBOSE) if verbose else trt.Logger()
     with trt.Builder(TRT_LOGGER) as builder, builder.create_network(*EXPLICIT_BATCH) as network, trt.OnnxParser(network, TRT_LOGGER) as parser:
@@ -108,7 +108,7 @@ def main():
         '-v', '--verbose', action='store_true',
         help='enable verbose output (for debugging)')
     parser.add_argument(
-        '-c', '--category_num', type=int, default=80,
+        '-c', '--category_num', type=int, default=8,
         help='number of object categories [80]')
     parser.add_argument(
         '-m', '--model', type=str, required=True,

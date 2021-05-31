@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(yolov4_trt_ros)
 
-find_package(OpenCV 3.0 REQUIRED)
+find_package(OpenCV 4.2.0 REQUIRED)
 find_package(jetson-utils REQUIRED)
 find_package(jetson-inference REQUIRED)
 find_package(CUDA REQUIRED)
-
-catkin_python_setup()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/package.xml ${CMAKE_CURRENT_SOURCE_DIR}/package.xml COPYONLY)
 
@@ -18,6 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   message_generation
 )
+
+catkin_python_setup()
 
 add_message_files(
   FILES

@@ -1,14 +1,12 @@
 CLASSES_LIST = [
-    'bike',
-    'bus',
-    'car',
-    'motor',
-    'person',
-    'rider',
-    'traffic light',
-    'traffic sign',
-    'train',
-    'truck',
+    'survivor',
+    'fire extinguisher',
+    'cellphone',
+    'drill',
+    'backpack',
+    'vent',
+    'helmet',
+    'rope',
 ]
 
 def get_cls_dict(category_num):
