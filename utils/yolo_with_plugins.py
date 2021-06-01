@@ -205,7 +205,7 @@ class TrtYOLO(object):
         with open(TRTbin, 'rb') as f, trt.Runtime(self.trt_logger) as runtime:
             return runtime.deserialize_cuda_engine(f.read())
 
-    def __init__(self, model, input_shape, category_num=80, cuda_ctx=None):
+    def __init__(self, model, input_shape, category_num=8, cuda_ctx=None):
         """Initialize TensorRT plugins, engine and context."""
         self.model = model
         self.input_shape = input_shape

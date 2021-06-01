@@ -53,7 +53,7 @@ class yolov4(object):
         rospack = rospkg.RosPack()
         package_path = rospack.get_path("yolov4_trt_ros")
         self.video_topic = rospy.get_param("/video_topic", "/alphasense_driver_ros/cam4/debayered")
-        self.model = rospy.get_param("/model", "yolov3")
+        self.model = rospy.get_param("/model", "yolov3_tiny")
         self.model_path = rospy.get_param(
             "/model_path", package_path + "/yolo/")
         self.input_shape = rospy.get_param("/input_shape", "416")
@@ -105,14 +105,16 @@ class yolov4(object):
         if cv_img is not None:
             boxes, confs, clss = self.trt_yolo.detect(cv_img, self.conf_th)
 
+            cv_img = self.vis.draw_bboxes(cv_img, boxes, confs, clss)
+
             toc = time.time()
             fps = 1.0 / (toc - tic)
-            cv_img = self.vis.draw_bboxes(cv_img, boxes, confs, clss)
+
             self.publisher(boxes, confs, clss)
 
             if self.show_img:
                 cv_img = show_fps(cv_img, fps)
-                cv2.imshow("YOLOv4 DETECTION RESULTS", cv_img)
+                cv2.imshow("YOLOv3 DETECTION RESULTS", cv_img)
                 cv2.waitKey(1)
 
         # converts back to ros_img type for publishing
