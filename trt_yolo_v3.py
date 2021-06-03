@@ -18,6 +18,7 @@ from yolov4_trt_ros.msg import Detector2DArray
 from yolov4_trt_ros.msg import Detector2D
 from vision_msgs.msg import BoundingBox2D
 from sensor_msgs.msg import Image
+from std_msgs.msg import Int8
 from cv_bridge import CvBridge, CvBridgeError
 
 
@@ -62,10 +63,11 @@ class yolov4(object):
         self.show_img = rospy.get_param("/show_image", True)
         self.image_sub = rospy.Subscriber(
             self.video_topic, Image, self.img_callback, queue_size=1, buff_size=1920*1080*3)
-        self.detection_pub = rospy.Publisher(
+        self.boundingBoxesPublisher_ = rospy.Publisher(
             "detections", Detector2DArray, queue_size=1)
-        self.overlay_pub = rospy.Publisher(
+        self.detectionImagePublisher_ = rospy.Publisher(
             "/result/overlay", Image, queue_size=1)
+        self.objectPublisher_ = rospy.Publisher("number_detections", Int8, queue_size=1)
 
     def init_yolo(self):
         """ Initialises yolo parameters required for trt engine """
@@ -120,9 +122,9 @@ class yolov4(object):
         # converts back to ros_img type for publishing
         try:
             overlay_img = self.bridge.cv2_to_imgmsg(
-                cv_img, encoding="passthrough")
+                cv_img, encoding="bgr8")
             rospy.logdebug("CV Image converted for publishing")
-            self.overlay_pub.publish(overlay_img)
+            self.detectionImagePublisher_.publish(overlay_img)
         except CvBridgeError as e:
             rospy.loginfo("Failed to convert image %s", str(e))
 
@@ -138,6 +140,8 @@ class yolov4(object):
         detection = Detector2D()
         detection2d.header.stamp = rospy.Time.now()
         
+        self.objectPublisher_.publish(len(boxes))
+
         for i in range(len(boxes)):
             # boxes : xmin, ymin, xmax, ymax
             for _ in boxes:
@@ -155,7 +159,7 @@ class yolov4(object):
 
             detection2d.detections.append(detection)
         
-        self.detection_pub.publish(detection2d)
+        self.boundingBoxesPublisher_.publish(detection2d)
 
 
 def main():

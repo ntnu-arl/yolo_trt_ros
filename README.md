@@ -2,7 +2,7 @@
 
 This package contains the yolov4_trt_node that performs the inference using NVIDIA's TensorRT engine
 
-This package works for both YOLOv3 and YOLOv4. Do change the commands accordingly, corresponding to the YOLO model used.
+This package works for YOLOv3.
 
 
 ![Video_Result2](docs/results.gif)
@@ -17,12 +17,12 @@ This package works for both YOLOv3 and YOLOv4. Do change the commands accordingl
 - Jetson Xavier AGX
 - ROS Melodic
 - Ubuntu 18.04
-- Jetpack 4.4
+- Jetpack 4.5.1
 - TensorRT 7+
 
 #### Dependencies:
 
-- OpenCV 3.x
+- OpenCV 4.2.0
 - numpy 1.15.1
 - Protobuf 3.8.0
 - Pycuda 2019.1.2
@@ -31,11 +31,11 @@ This package works for both YOLOv3 and YOLOv4. Do change the commands accordingl
 ### Install all dependencies with below commands
 
 ```
-Install pycuda (takes awhile)
+Install pycuda (takes a while)
 $ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/dependencies
 $ ./install_pycuda.sh
 
-Install Protobuf (takes awhile)
+Install Protobuf (takes a while)
 $ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/dependencies
 $ ./install_protobuf-3.8.0.sh
 
@@ -101,12 +101,7 @@ $ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/launch
 
 - `yolov3_trt.launch` : change the topic_name
 
-- `yolov4_trt.launch` : change the topic_name
-
-- `video_source.launch` : change the input format (refer to this [Link](https://github.com/dusty-nv/jetson-inference/blob/master/docs/aux-streaming.md)
-
-   * video_source.launch requires jetson-inference to be installed
-   * Default input is CSI camera
+- `yolov3_tiny_trt.launch` : change the topic_name
 
 ---
 ## Using the package
@@ -115,33 +110,18 @@ $ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/launch
 
 Note: Run the launch files separately in different terminals
 
-### 1. Run the video_source 
-
-```
-# For csi input
-$ roslaunch yolov4_trt_ros video_source.launch input:=csi://0
-
-# For video input
-$ roslaunch yolov4_trt_ros video_source.launch input:=/path_to_video/video.mp4
-
-# For USB camera
-$ roslaunch yolov4_trt_ros video_source.launch input:=v4l2://0
-```
-
-### 2. Run the yolo detector
+### 1. Run the yolo detector
 
 ```
 # For YOLOv3 (single input)
 $ roslaunch yolov4_trt_ros yolov3_trt.launch
 
-# For YOLOv4 (single input)
-$ roslaunch yolov4_trt_ros yolov4_trt.launch
+# For YOLOv3 Tiny (single input)
+$ roslaunch yolov4_trt_ros yolov3_tiny_trt.launch
 
-# For YOLOv4 (multiple input)
-$ roslaunch yolov4_trt_ros yolov4_trt_batch.launch
 ```
 
-### 3. For maximum performance
+### 2. For maximum performance
 
 ```
 $ cd /usr/bin/
@@ -154,10 +134,10 @@ $ sudo ./jetson_clock	# Maximise CPU/GPU performance
 
 ### Parameters
 
-- str model = "yolov3" or "yolov4" 
+- str model = "yolov3" or "yolov3_tiny" 
 - str model_path = "/abs_path_to_model/"
 - int input_shape = 288/416/608
-- int category_num = 80
+- int category_num = 8
 - double conf_th = 0.5
 - bool show_img = True
 

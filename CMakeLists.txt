@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(yolov4_trt_ros)
 
-find_package(OpenCV 4.2.0 REQUIRED)
+find_package(OpenCV 4.2.0 REQUIRED
+    	PATHS /usr/local
+	NO_DEFAULT_PATH	
+)
 find_package(jetson-utils REQUIRED)
 find_package(jetson-inference REQUIRED)
 find_package(CUDA REQUIRED)
@@ -17,15 +20,14 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
-catkin_python_setup()
-
-add_message_files(
-  FILES
+add_message_files(FILES
   Detector2D.msg
   Detector2DArray.msg
   BoundingBox2D.msg
   ObjectHypothesis.msg
 )
+
+catkin_python_setup()
 
 generate_messages(DEPENDENCIES std_msgs vision_msgs)
 	 
@@ -42,6 +44,6 @@ set(common_src src/image_converter.cpp src/ros_compat.cpp)
 add_executable(video_source src/node_video_source.cpp ${common_src})
 target_link_libraries(video_source ${catkin_LIBRARIES} jetson-inference)
 
-catkin_install_python(PROGRAMS trt_yolo_v4_batch.py
+catkin_install_python(PROGRAMS trt_yolo_v3_batch.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
