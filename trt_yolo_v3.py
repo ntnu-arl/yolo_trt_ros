@@ -53,13 +53,13 @@ class yolov4(object):
         
         rospack = rospkg.RosPack()
         package_path = rospack.get_path("yolov4_trt_ros")
-        self.video_topic = rospy.get_param("/video_topic", "/alphasense_driver_ros/cam4/debayered")
+        self.video_topic = rospy.get_param("/video_topic", "/alphasense_driver_ros/cam6/debayered")
         self.model = rospy.get_param("/model", "yolov3_tiny")
         self.model_path = rospy.get_param(
             "/model_path", package_path + "/yolo/")
         self.input_shape = rospy.get_param("/input_shape", "416")
         self.category_num = rospy.get_param("/category_number", 8)
-        self.conf_th = rospy.get_param("/confidence_threshold", 0.5)
+        self.conf_th = rospy.get_param("/confidence_threshold", 0.2)
         self.show_img = rospy.get_param("/show_image", True)
         self.image_sub = rospy.Subscriber(
             self.video_topic, Image, self.img_callback, queue_size=1, buff_size=1920*1080*3)
