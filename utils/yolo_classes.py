@@ -5,7 +5,7 @@ CLASSES_LIST = [
     'drill',
     'backpack',
     'vent',
-    'helmet',
+    'helmet', 
     'rope',
 ]
 

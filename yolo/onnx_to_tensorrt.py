@@ -58,19 +58,32 @@ import tensorrt as trt
 
 from plugins import add_yolo_plugins
 
+MAX_BATCH_SIZE = 1
 
 EXPLICIT_BATCH = []
 if trt.__version__[0] >= '7':
     EXPLICIT_BATCH.append(
         1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
 
+def set_net_batch(network, batch_size):
+    """Set network input batch size.
+
+    The ONNX file might have been generated with a different batch size,
+    say, 64.
+    """
+    if trt.__version__[0] >= '7':
+        shape = list(network.get_input(0).shape)
+        shape[0] = batch_size
+        network.get_input(0).shape = shape
+    return network
 
 def build_engine(onnx_file_path, category_num=8, verbose=False):
     """Build a TensorRT engine from an ONNX file."""
+
     TRT_LOGGER = trt.Logger(trt.Logger.VERBOSE) if verbose else trt.Logger()
     with trt.Builder(TRT_LOGGER) as builder, builder.create_network(*EXPLICIT_BATCH) as network, trt.OnnxParser(network, TRT_LOGGER) as parser:
         builder.max_workspace_size = 1 << 28
-        builder.max_batch_size = 1
+        builder.max_batch_size = MAX_BATCH_SIZE
         builder.fp16_mode = True
         #builder.strict_type_constraints = True
 
@@ -82,12 +95,8 @@ def build_engine(onnx_file_path, category_num=8, verbose=False):
                 for error in range(parser.num_errors):
                     print(parser.get_error(error))
                 return None
-        if trt.__version__[0] >= '7':
-            # The actual yolo*.onnx is generated with batch size 64.
-            # Reshape input to batch size 1
-            shape = list(network.get_input(0).shape)
-            shape[0] = 1
-            network.get_input(0).shape = shape
+
+        network = set_net_batch(network, MAX_BATCH_SIZE)
 
         print('Adding yolo_layer plugins...')
         model_name = onnx_file_path[:-5]
@@ -109,12 +118,15 @@ def main():
         help='enable verbose output (for debugging)')
     parser.add_argument(
         '-c', '--category_num', type=int, default=8,
-        help='number of object categories [80]')
+        help='number of object categories [8]')
     parser.add_argument(
         '-m', '--model', type=str, required=True,
         help=('[yolov3|yolov3-tiny|yolov3-spp|yolov4|yolov4-tiny]-'
               '[{dimension}], where dimension could be a single '
               'number (e.g. 288, 416, 608) or WxH (e.g. 416x256)'))
+    parser.add_argument(
+        '--int8', action='store_true',
+        help='build INT8 TensorRT engine')
     args = parser.parse_args()
 
     onnx_file_path = '%s.onnx' % args.model

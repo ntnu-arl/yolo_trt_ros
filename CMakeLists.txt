@@ -32,7 +32,13 @@ catkin_python_setup()
 generate_messages(DEPENDENCIES std_msgs vision_msgs)
 	 
 catkin_package(
-  CATKIN_DEPENDS nodelet rospy image_transport sensor_msgs vision_msgs cv_bridge message_runtime
+  CATKIN_DEPENDS 
+  nodelet rospy 
+  image_transport 
+  sensor_msgs 
+  #vision_msgs 
+  cv_bridge 
+  message_runtime
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")	# enable c++11 (TensorRT requirement)

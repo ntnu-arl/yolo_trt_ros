@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import ctypes
+import os 
 
 import rospkg
 import numpy as np
@@ -204,7 +205,7 @@ class TrtYOLO(object):
     def _load_engine(self):
         TRTbin = '%s.trt' % self.model
         with open(TRTbin, 'rb') as f, trt.Runtime(self.trt_logger) as runtime:
-            print("YOLO object detection: loaded TensorRT engine")
+            print("YOLO object detection: loaded TensorRT engine \n")
             return runtime.deserialize_cuda_engine(f.read())
 
     def __init__(self, model, input_shape, category_num=80, cuda_ctx=None):
@@ -223,6 +224,7 @@ class TrtYOLO(object):
         self.overall_boxes = []
         self.overall_scores = []
         self.overall_classes = []
+        print("Batch size: %d \n", self.engine.max_batch_size)
 
     def __del__(self):
         """Free CUDA memories."""
@@ -291,8 +293,8 @@ class TrtYOLO(object):
         [cuda.memcpy_htod_async(inp.device, inp.host, stream)
          for inp in inputs]
         # Run inference.
-        context.execute_async_v2(
-            bindings=self.bindings, stream_handle=stream.handle)
+        context.execute_async(
+            batch_size=4, bindings=self.bindings, stream_handle=stream.handle)
         # Transfer predictions back from the GPU.
         [cuda.memcpy_dtoh_async(out.host, out.device, stream)
          for out in outputs]

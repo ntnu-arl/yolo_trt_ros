@@ -1,0 +1,26 @@
+subscribers:
+
+  camera_reading:
+    topic: /alphasense_driver_ros/cam4/debayered
+    queue_size: 1
+
+publishers:
+
+  object_detector:
+    topic: /detected_objects
+    queue_size: 1
+    latch: false
+
+  bounding_boxes:
+    topic: /bounding_boxes
+    queue_size: 1
+    latch: false
+
+  detection_image:
+    topic: /detection_image
+    queue_size: 1
+    latch: true
+
+image_view:
+
+  enable_opencv: true

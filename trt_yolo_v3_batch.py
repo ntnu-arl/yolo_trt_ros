@@ -80,7 +80,7 @@ class yolov4(object):
             "detections", Detector2DArray, queue_size=1)
         self.detectionImagePublisher_ = rospy.Publisher(
             "/result/overlay", Image, queue_size=1)
-        self.objectPublisher_ = rospy.Publisher("number_detections", Int8, queue_size=1)
+        self.objectPublisher_ = rospy.Publisher("detected_objects", Int8, queue_size=1)
 
     def init_yolo(self):
         """ Initialises yolo parameters required for trt engine """
@@ -152,7 +152,7 @@ class yolov4(object):
             rospy.loginfo("Failed to convert image %s", str(e))
 
         tic = time.time()
-        boxes, confs, clss = self.trt_yolo.detect2(cv_img, self.conf_th)
+        boxes, confs, clss = self.trt_yolo.detect1(cv_img, self.conf_th)
         cv_img = self.vis.draw_bboxes(cv_img, boxes, confs, clss)
         toc = time.time()
         fps = 1.0 / (toc - tic)
@@ -191,7 +191,7 @@ class yolov4(object):
             rospy.loginfo("Failed to convert image %s", str(e))
 
         tic = time.time()
-        boxes, confs, clss = self.trt_yolo.detect3(cv_img, self.conf_th)
+        boxes, confs, clss = self.trt_yolo.detect1(cv_img, self.conf_th)
         cv_img = self.vis.draw_bboxes(cv_img, boxes, confs, clss)
         toc = time.time()
         fps = 1.0 / (toc - tic)
@@ -227,7 +227,7 @@ class yolov4(object):
             rospy.loginfo("Failed to convert image %s", str(e))
 
         tic = time.time()
-        boxes, confs, clss = self.trt_yolo.detect4(cv_img, self.conf_th)
+        boxes, confs, clss = self.trt_yolo.detect1(cv_img, self.conf_th)
         cv_img = self.vis.draw_bboxes(cv_img, boxes, confs, clss)
         toc = time.time()
         fps = 1.0 / (toc - tic)
