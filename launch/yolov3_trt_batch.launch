@@ -1,24 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <launch>
-	  <!--ignore Play long rosbag -->
-	<param name="use_sim_time" value="true"/>
-	<arg name="bag_file" default="$(find /media/integration/xavier_sd/semester_project/rosbags
-	)/yolo_evaluation_bagfile_qualification_video_20210407_2021-04-13-20-59-42.bag
-	"/>
-	<node pkg="rosbag" type="play" name="rosbag_play" output="screen" args="--clock --pause --start 60 $(arg bag_file)"/>
+	 <!-- ROS and network parameter files -->
+  	<arg name="ros_param_file"             default="$(find yolov4_trt_ros)/config/ros.yaml"/>
+  	<arg name="network_param_file"         default="$(find yolov4_trt_ros)/config/yolov3.yaml"/>
 
+	<!-- rqt dashboard-->>
+  	<node name = "my_rqt_dashboard" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen" 
+		  args = "--perspective-file $(find yolov4_trt_ros)/config/yolov4_trt_ros.perspective"/>
+	
 	<!-- yolov4_trt_node -->
 	<node pkg="yolov4_trt_ros" type="trt_yolo_v3_batch.py" name="yolov4_trt_node_batch" output="screen">
-		<param name="video_topic_left" type="string" value="alphasense_driver_ros/cam3/debayered" />
-		<param name="video_topic_front" type="string" value="alphasense_driver_ros/cam4/debayered" />
-        <param name="video_topic_right" type="string" value="alphasense_driver_ros/cam5/debayered" />
-        <param name="video_topic_top" type="string" value="alphasense_driver_ros/cam6/debayered" />
-		<param name="model" type="string" value="yolov3" />	
-		<param name="model_path" type="string" value="$(find yolov4_trt_ros)/yolo/" />
-		<param name="input_shape" type="string" value="416" />
-		<param name="category_number" type="int" value="8" />
-		<param name="confidence_threshold" type="double" value="0.5" />
-		<param name="show_image" type="bool" value="True" />
+		<rosparam command="load" file="$(arg ros_param_file)"/>
+		<rosparam command="load" file="$(arg network_param_file)"/>
 	</node>
 </launch>

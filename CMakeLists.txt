@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   vision_msgs
   cv_bridge
+  std_msgs
   message_generation
 )
 
@@ -29,7 +30,7 @@ add_message_files(FILES
 
 catkin_python_setup()
 
-generate_messages(DEPENDENCIES std_msgs vision_msgs)
+#generate_messages(DEPENDENCIES std_msgs vision_msgs)
 	 
 catkin_package(
   CATKIN_DEPENDS 

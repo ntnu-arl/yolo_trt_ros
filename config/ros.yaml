@@ -1,8 +1,12 @@
 subscribers:
 
   camera_reading:
-    topic: /alphasense_driver_ros/cam4/debayered
+    topic_front: /alphasense_driver_ros/cam4/dropped/debayered
+    topic_left: /alphasense_driver_ros/cam3/dropped/debayered
+    topic_right: /alphasense_driver_ros/cam5/dropped/debayered
+    topic_top: /alphasense_driver_ros/cam6/dropped/debayered
     queue_size: 1
+    resolution: 720*540*3
 
 publishers:
 

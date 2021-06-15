@@ -53,31 +53,33 @@ class yolov4(object):
         
         rospack = rospkg.RosPack()
         package_path = rospack.get_path("yolov4_trt_ros")
-        self.camera_topic_name = rospy.get_param("/subscribers/camera_reading/topic", "/alphasense_driver_ros/cam4/dropped/debayered")
-        self.camera_queue_size = rospy.get_param("/subscribers/camera_readign/queue_size", 1)
-        self.object_detector_topic_name = rospy.get_param("/publishers/object_detector/topic", "/detected_objects")
-        self.object_detector_queue_size = rospy.get_param("/publishers/object_detector/queue_size", 1)
-        self.bounding_boxes_topic_name = rospy.get_param("/publishers/bounding_boxes/topic", "/bounding_boxes")
-        self.bounding_boxes_queue_size = rospy.get_param("publishers/bounding_boxes/queue_size", 1)
-        self.detection_image_topic_name = rospy.get_param("/publishers/detection_image/topic", "/detection_image")
-        self.detection_image_queue_size = rospy.get_param("/publishers/detection_image/queue_size", 1)
+        self.camera_topic_name = rospy.get_param("/yolov4_trt_node/subscribers/camera_reading/topic_front", "alphasense_driver_ros/cam4/dropped/debayered")
+        self.camera_queue_size = rospy.get_param("/yolov4_trt_node/subscribers/camera_reading/queue_size", 1)
+        self.img_dim = rospy.get_param("/yolov4_trt_node/subscribers/camera_resolution", 720*540*3)
+        self.object_detector_topic_name = rospy.get_param("/yolov4_trt_node/publishers/object_detector/topic", "/detected_objects")
+        self.object_detector_queue_size = rospy.get_param("/yolov4_trt_node/publishers/object_detector/queue_size", 1)
+        self.bounding_boxes_topic_name = rospy.get_param("/yolov4_trt_node/publishers/bounding_boxes/topic", "/bounding_boxes")
+        self.bounding_boxes_queue_size = rospy.get_param("/yolov4_trt_node/publishers/bounding_boxes/queue_size", 1)
+        self.detection_image_topic_name = rospy.get_param("/yolov4_trt_node/publishers/detection_image/topic", "/detection_image")
+        self.detection_image_queue_size = rospy.get_param("/yolov4_trt_node/publishers/detection_image/queue_size", 1)
 
-        self.model = rospy.get_param("yolo_model/model/name", "yolov3")
-        self.model_path = rospy.get_param("yolo_model/model/name", package_path + "/yolo/")
-        self.input_shape = rospy.get_param("yolo_model/input_shape/value", "416")
-        self.category_num = rospy.get_param("yolo_model/category_number/value", 8)
-        self.conf_th = rospy.get_param("yolo_model/confidence_threshold/value", 0.2)
-        self.batch_size = rospy.get_param("yolo_model/batch_size/value", 1)
-        self.show_img = rospy.get_param("image_view/enable_opencv", True)
+        self.model = rospy.get_param("/yolov4_trt_node/yolo_model/model/name", "yolov3")
+        self.model_path = rospy.get_param("yolov4_trt_node/yolo_model/model_path", package_path + "/yolo/")
+        self.input_shape = rospy.get_param("/yolov4_trt_node/yolo_model/input_shape/value", "416")
+        self.category_num = rospy.get_param("/yolov4_trt_node/yolo_model/category_number/value", 8)
+        self.conf_th = rospy.get_param("/yolov4_trt_node/yolo_model/confidence_threshold/value", 0.2)
+        self.batch_size = rospy.get_param("/yolov4_trt_node/yolo_model/batch_size/value", 1)
+        self.show_img = rospy.get_param("/yolov4_trt_node/image_view/enable_opencv", True)
+
 
         self.image_sub = rospy.Subscriber(
-            self.camera_topic_name, Image, self.img_callback, queue_size=1, buff_size=1920*1080*3)
+            self.camera_topic_name, Image, self.img_callback, queue_size=self.camera_queue_size, buff_size=self.img_dim)
         self.bounding_boxes_publisher = rospy.Publisher(
-            self.bounding_boxes_topic_name, Detector2DArray, queue_size=1)
+            self.bounding_boxes_topic_name, Detector2DArray, queue_size=self.bounding_boxes_queue_size)
         self.detection_image_publisher = rospy.Publisher(
-            self.detection_image_topic_name, Image, queue_size=1)
+            self.detection_image_topic_name, Image, queue_size=self.detection_image_queue_size)
         self.object_publisher = rospy.Publisher(
-            self.object_detector_topic_name, Int8, queue_size=1)
+            self.object_detector_topic_name, Int8, queue_size=self.object_detector_queue_size)
         
         self.iter = 0
         self.avg_fps = 0
@@ -87,7 +89,7 @@ class yolov4(object):
 
         if self.model.find('-') == -1:
             self.model = self.model + "-" + self.input_shape
-            
+
         yolo_dim = self.model.split('-')[-1]
 
         if 'x' in yolo_dim:
@@ -180,11 +182,12 @@ class yolov4(object):
 
 
 def main():
-    yolo = yolov4()
     rospy.init_node('yolov4_detection', anonymous=True)
+    yolo = yolov4()
     try:
         rospy.spin()
     except KeyboardInterrupt:
+        del yolo
         rospy.on_shutdown(yolo.clean_up())
         print("Shutting down")
 

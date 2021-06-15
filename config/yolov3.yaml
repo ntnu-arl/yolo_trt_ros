@@ -1,12 +1,12 @@
 yolo_model:
 
   model:
-    name: yolov3
+    name: 'yolov3_tiny'
   input_shape:
-    value: 416
+    value: '416'
   confidence_threshold:
     value: 0.2
   batch_size:
-    value: 4
+    value: 1
   category_num:
     value: 8
