@@ -16,10 +16,10 @@ import rospy
 import rospkg
 from yolov4_trt_ros.msg import Detector2DArray
 from yolov4_trt_ros.msg import Detector2D
-from yolov4_trt_ros.msg import BoundingBox2D
+from vision_msgs.msg import BoundingBox2D
 from sensor_msgs.msg import Image
-from std_msgs.msg import Int8
 from cv_bridge import CvBridge, CvBridgeError
+from std_msgs.msg import Int8, Int32
 
 
 class yolov4(object):
@@ -98,6 +98,7 @@ class yolov4(object):
         #    self.detection_image_topic_name4, Image, queue_size=self.detection_image_queue_size)
         self.object_publisher = rospy.Publisher(
             self.object_detector_topic_name, Int8, queue_size=self.object_detector_queue_size)
+        self.framerate_publisher = rospy.Publisher("/yolov4_trt_node/framerate/value", Int32, queue_size=1)
         
         self.iter = 0
         self.avg_fps = 0
@@ -126,161 +127,144 @@ class yolov4(object):
     def img_callback1(self, ros_img):
         """Continuously capture images from camera and do object detection """
 
-        tic = time.time()
-        self.iter = self.iter + 1
-
-        # converts from ros_img to cv_img1 for processing
+        # converts from ros_img to cv_img for processing
         try:
-            cv_img1 = self.bridge.imgmsg_to_cv2(
+            cv_img = self.bridge.imgmsg_to_cv2(
                 ros_img, desired_encoding="bgr8")
             rospy.logdebug("ROS Image converted for processing")
         except CvBridgeError as e:
             rospy.loginfo("Failed to convert image %s", str(e))
 
-        boxes, confs, clss = self.trt_yolo.detect1(cv_img1, self.conf_th, self.batch_size)
-        cv_img1 = self.vis.draw_bboxes(cv_img1, boxes, confs, clss)
+        tic = time.time()
+        self.iter = self.iter + 1 
+
+        boxes, confs, clss = self.trt_yolo.detect1(cv_img, self.conf_th)
+        cv_img = self.vis.draw_bboxes(cv_img, boxes, confs, clss)
         toc = time.time()
         fps = 1.0 / (toc - tic)
-        self.avg_fps = self.avg_fps*(self.iter-1)/self.iter + fps/self.iter
-        print("Average framerate: " + str(self.avg_fps) + "\n")
         #print("Cam1: " + str(fps) + "\n")
-
-        self.publisher(boxes, confs, clss, "Cam1")
-
-        """ 
+        self.avg_fps = self.avg_fps*(self.iter-1)/self.iter + fps/self.iter
+        print(self.avg_fps)
+        #self.framerate_publisher.publish(self.avg_fps)
+        self.publisher(boxes, confs, clss, "Front Camera")
+        
+        """
         if self.show_img:
-            cv_img1 = show_fps(cv_img1, fps)
-            cv2.namedWindow("Front Camera", cv2.WINDOW_NORMAL)
-            cv2.moveWindow("Front Camera", 0, 0)
-            cv2.resizeWindow("Front Camera", 640, 480)
-            cv2.imshow("Front Camera", cv_img1)
+            cv_img = show_fps(cv_img, fps)
+            cv2.imshow("Cam 1", cv_img)
             cv2.waitKey(1)
         """
+        
         # converts back to ros_img type for publishing
         try:
-            overlay_img1 = self.bridge.cv2_to_imgmsg(
-                cv_img1, encoding="bgr8")
+            overlay_img = self.bridge.cv2_to_imgmsg(
+                cv_img, encoding="bgr8")
             rospy.logdebug("CV Image converted for publishing")
-            self.detection_image_publisher1.publish(overlay_img1)
+            self.detection_image_publisher1.publish(overlay_img)
         except CvBridgeError as e:
             rospy.loginfo("Failed to convert image %s", str(e))
 
     def img_callback2(self, ros_img):
         """Continuously capture images from camera and do object detection """
 
-        tic = time.time()
-
-        # converts from ros_img to cv_img2 for processing
+        # converts from ros_img to cv_img for processing
         # time both cv_bridge fns
         try:
-            cv_img2 = self.bridge.imgmsg_to_cv2(
+            cv_img = self.bridge.imgmsg_to_cv2(
                 ros_img, desired_encoding="bgr8")
             rospy.logdebug("ROS Image converted for processing")
         except CvBridgeError as e:
             rospy.loginfo("Failed to convert image %s", str(e))
-        
-        boxes, confs, clss = self.trt_yolo.detect1(cv_img2, self.conf_th, self.batch_size)
-        cv_img2 = self.vis.draw_bboxes(cv_img2, boxes, confs, clss)
+
+        tic = time.time()
+        boxes, confs, clss = self.trt_yolo.detect2(cv_img, self.conf_th)
+        cv_img = self.vis.draw_bboxes(cv_img, boxes, confs, clss)
         toc = time.time()
         fps = 1.0 / (toc - tic)
         #print("Cam2: " + str(fps) + "\n")
-        self.publisher(boxes, confs, clss, "Cam2")
-        """
+        self.publisher(boxes, confs, clss, "Left Camera")
+
         # time 1
+        """
         if self.show_img:
-            cv_img2 = show_fps(cv_img2, fps)
-            cv2.namedWindow("Left Camera", cv2.WINDOW_NORMAL)
-            cv2.moveWindow("Left Camera", 0, 550)
-            cv2.resizeWindow("Left Camera", 640, 480)
-            cv2.imshow("Left Camera", cv_img2)
+            cv_img = show_fps(cv_img, fps)
+            cv2.imshow("Cam 2", cv_img)
             # time 2
             cv2.waitKey(1)
         """
         
         # converts back to ros_img type for publishing
         try:
-            overlay_img2 = self.bridge.cv2_to_imgmsg(
-                cv_img2, encoding="bgr8")
+            overlay_img = self.bridge.cv2_to_imgmsg(
+                cv_img, encoding="bgr8")
             rospy.logdebug("CV Image converted for publishing")
-            self.detection_image_publisher2.publish(overlay_img2)
+            self.detection_image_publisher2.publish(overlay_img)
         except CvBridgeError as e:
             rospy.loginfo("Failed to convert image %s", str(e))
 
     def img_callback3(self, ros_img):
         """Continuously capture images from camera and do object detection """
 
-        tic = time.time()
-
-        # converts from ros_img to cv_img3 for processing
+        # converts from ros_img to cv_img for processing
         try:
-            cv_img3 = self.bridge.imgmsg_to_cv2(
+            cv_img = self.bridge.imgmsg_to_cv2(
                 ros_img, desired_encoding="bgr8")
             rospy.logdebug("ROS Image converted for processing")
         except CvBridgeError as e:
             rospy.loginfo("Failed to convert image %s", str(e))
 
-        boxes, confs, clss = self.trt_yolo.detect1(cv_img3, self.conf_th, self.batch_size)
-        cv_img3 = self.vis.draw_bboxes(cv_img3, boxes, confs, clss)
+        tic = time.time()
+        boxes, confs, clss = self.trt_yolo.detect3(cv_img, self.conf_th)
+        cv_img = self.vis.draw_bboxes(cv_img, boxes, confs, clss)
         toc = time.time()
         fps = 1.0 / (toc - tic)
         #print("Cam3: " + str(fps) + "\n")
-        self.publisher(boxes, confs, clss, "Cam3")
-
+        self.publisher(boxes, confs, clss, "Right Camera")
         """
-        if self.show_img:
-            cv_img3 = show_fps(cv_img3, fps)
-            cv2.namedWindow("Right Camera", cv2.WINDOW_NORMAL)
-            cv2.moveWindow("Right Camera", 800, 550)
-            cv2.resizeWindow("Right Camera", 640, 480)
-            cv2.imshow("Right Camera", cv_img3)
-            cv2.waitKey(1)
+            if self.show_img:
+                cv_img = show_fps(cv_img, fps)
+                cv2.imshow("Cam 3", cv_img)
+                cv2.waitKey(1)
         """
-
         # converts back to ros_img type for publishing
         try:
-            overlay_img3 = self.bridge.cv2_to_imgmsg(
-                cv_img3, encoding="bgr8")
+            overlay_img = self.bridge.cv2_to_imgmsg(
+                cv_img, encoding="bgr8")
             rospy.logdebug("CV Image converted for publishing")
-            self.detection_image_publisher3.publish(overlay_img3)
+            self.detection_image_publisher3.publish(overlay_img)
         except CvBridgeError as e:
             rospy.loginfo("Failed to convert image %s", str(e))
 
     def img_callback4(self, ros_img):
         """Continuously capture images from camera and do object detection """
 
-        tic = time.time()
-
-        # converts from ros_img to cv_img4 for processing
+        # converts from ros_img to cv_img for processing
         try:
-            cv_img4 = self.bridge.imgmsg_to_cv2(
+            cv_img = self.bridge.imgmsg_to_cv2(
                 ros_img, desired_encoding="bgr8")
             rospy.logdebug("ROS Image converted for processing")
         except CvBridgeError as e:
             rospy.loginfo("Failed to convert image %s", str(e))
 
-        boxes, confs, clss = self.trt_yolo.detect4(cv_img4, self.conf_th, self.batch_size)
-        cv_img4 = self.vis.draw_bboxes(cv_img4, boxes, confs, clss)
+        tic = time.time()
+        boxes, confs, clss = self.trt_yolo.detect4(cv_img, self.conf_th)
+        cv_img = self.vis.draw_bboxes(cv_img, boxes, confs, clss)
         toc = time.time()
         fps = 1.0 / (toc - tic)
         #print("Cam4: " + str(fps) + "\n")
-        self.publisher(boxes, confs, clss, "Cam4")
-
+        self.publisher(boxes, confs, clss, "Top Camera")
         """
-        if self.show_img:
-            cv_img4 = show_fps(cv_img4, fps)
-            cv2.namedWindow("Top Camera", cv2.WINDOW_NORMAL)
-            cv2.moveWindow("Top Camera", 800, 0)
-            cv2.resizeWindow("Top Camera", 640, 480)
-            cv2.imshow("Top Camera", cv_img4)
-            cv2.waitKey(1)
+            if self.show_img:
+                cv_img = show_fps(cv_img, fps)
+                cv2.imshow("Cam 3", cv_img)
+                cv2.waitKey(1)
         """
-
         # converts back to ros_img type for publishing
         try:
-            overlay_img4 = self.bridge.cv2_to_imgmsg(
-                cv_img4, encoding="bgr8")
+            overlay_img = self.bridge.cv2_to_imgmsg(
+                cv_img, encoding="bgr8")
             rospy.logdebug("CV Image converted for publishing")
-            self.detection_image_publisher4.publish(overlay_img4)
+            self.detection_image_publisher4.publish(overlay_img)
         except CvBridgeError as e:
             rospy.loginfo("Failed to convert image %s", str(e))
 
@@ -294,7 +278,6 @@ class yolov4(object):
         detection2d = Detector2DArray()
         detection = Detector2D()
         detection2d.header.stamp = rospy.Time.now()
-        detection2d.header.frame_id = frame  # change accordingly
 
         self.object_publisher.publish(len(boxes))
 
@@ -317,11 +300,11 @@ class yolov4(object):
 
             detection2d.detections.append(detection)
 
-            self.bounding_boxes_publisher.publish(detection2d)
+        self.bounding_boxes_publisher.publish(detection2d)
 
 
 def main():
-    rospy.init_node('yolov4_trt_ros', anonymous=True)
+    rospy.init_node('yolov4_detection', anonymous=True)
     yolo = yolov4()
     try:
         rospy.spin()

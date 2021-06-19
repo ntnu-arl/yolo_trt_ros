@@ -5,8 +5,7 @@ find_package(OpenCV 4.2.0 REQUIRED
     	PATHS /usr/local
 	NO_DEFAULT_PATH	
 )
-find_package(jetson-utils REQUIRED)
-find_package(jetson-inference REQUIRED)
+
 find_package(CUDA REQUIRED)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/package.xml ${CMAKE_CURRENT_SOURCE_DIR}/package.xml COPYONLY)
@@ -46,11 +45,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")	# enable c++11 (TensorRT re
 include_directories(${catkin_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 add_definitions(-DROS1)
 
-set(common_src src/image_converter.cpp src/ros_compat.cpp)
-
-add_executable(video_source src/node_video_source.cpp ${common_src})
-target_link_libraries(video_source ${catkin_LIBRARIES} jetson-inference)
-
-#catkin_install_python(PROGRAMS trt_yolo_v3_batch.py
-#  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
+catkin_install_python(PROGRAMS trt_yolo_v3_batch.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

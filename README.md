@@ -1,11 +1,9 @@
-# YOLOv4 with TensorRT engine
+# YOLOv3 with TensorRT engine
 
-This package contains the yolov4_trt_node that performs the inference using NVIDIA's TensorRT engine
-
-This package works for YOLOv3.
+This package contains the yolov4_trt_node that performs object detection with YOLOv3 using NVIDIA's TensorRT engine
 
 
-![Video_Result2](docs/results.gif)
+<!--![Video_Result2](docs/results.gif)-->
 
 ---
 ## Setting up the environment
@@ -43,16 +41,13 @@ Install onnx (depends on Protobuf above)
 $ sudo pip3 install onnx==1.4.1
 ```
 
-* Please also install [jetson-inference](https://github.com/dusty-nv/ros_deep_learning#jetson-inference)
-* Note: This package uses similar nodes to ros_deep_learning package. Please place a CATKIN_IGNORE in that package to avoid similar node name catkin_make error
-* If these scripts do not work for you, do refer to this amazing repository by [jefflgaol](https://github.com/jefflgaol/Install-Packages-Jetson-ARM-Family) on installing the above packages and more on Jetson ARM devices.
 ---
 ## Setting up the package
 
 ### 1. Clone project into catkin_ws and build it
 
 ``` 
-$ cd ~/catkin_ws && catkin_make
+$ cd ~/catkin_ws && catkin build 
 $ source devel/setup.bash
 ```
 
@@ -63,16 +58,16 @@ $ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/plugins
 $ make
 ```
 
-This will generate a libyolo_layer.so file
+This will generate a libyolo_layer.so file.
 
 ### 3. Place your yolo.weights and yolo.cfg file in the yolo folder
 
 ```
 $ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/yolo
 ```
-** Please name the yolov4.weights and yolov4.cfg file as follows:
-- yolov4.weights
-- yolov4.cfg
+** Please name the yolov3.weights and yolov3.cfg file as follows:
+- yolov3-416.weights
+- yolov3-416.cfg
 
 Run the conversion script to convert to TensorRT engine file
 
@@ -82,7 +77,7 @@ $ ./convert_yolo_trt
 
 - Input the appropriate arguments
 - This conversion might take awhile
-- The optimised TensorRT engine would now be saved as yolov3-416.trt / yolov4-416.trt
+- The optimised TensorRT engine would now be saved as yolov3-416.trt / yolov3-416.trt
 
 ### 4. Change the class labels
 
@@ -93,16 +88,29 @@ $ vim yolo_classes.py
 
 - Change the class labels to suit your model
 
-### 5. Change the video_input and topic_name
+### 5. Change the *.yaml parameters
 
 ```
-$ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/launch
+$ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/config
 ```
 
-- `yolov3_trt.launch` : change the topic_name
+- `ros.yaml` : change the camera topic names. `yolov3_trt.launch` only subscribes to the front camera topic. `yolov3_trt_batch.launch` subscribes to all 4 camera topics.
+- `ros.yaml` : change resolution of cameras. If resolution unknown, enter `2**26`
 
-- `yolov3_tiny_trt.launch` : change the topic_name
+- `yolov3.yaml` : change parameters accordingly:
+   - str model = 'yolov3' or 'yolov3_tiny' 
+   - int input_shape = '288'/'416'/'608'
+   - int category_num = 8
+   - int batch_size = 1/4
+   - double confidence_threshold = 0.3
 
+### 6. Change the rosbag 
+<em>OPTIONAL: if running on rosbag</em>
+
+```
+$ cd ${HOME}/catkin_ws/src/yolov4_trt_node/launch
+```
+- `rosbag.launch` : change rosbag path
 ---
 ## Using the package
 
@@ -111,46 +119,39 @@ $ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/launch
 Note: Run the launch files separately in different terminals
 
 ### 1. Run the yolo detector
-
 ```
 # For YOLOv3 (single input)
 $ roslaunch yolov4_trt_ros yolov3_trt.launch
 
-# For YOLOv3 Tiny (single input)
+# For YOLOv3 batch (single input)
 $ roslaunch yolov4_trt_ros yolov3_tiny_trt.launch
 
 ```
+If using a rosbag, in a split terminal:
+```
+$ roslaunch yolov4_trt_node rosbag.launch
+```
+
 
 ### 2. For maximum performance
-
 ```
-$ cd /usr/bin/
-$ sudo ./nvpmodel -m 0	# Enable 2 Denver CPU
-$ sudo ./jetson_clock	# Maximise CPU/GPU performance
+sudo -H pip install -U jetson-stats
 ```
+In a seperate terminal: 
+```
+$ jtop
+```
+Press 5 to access the control tab of the Jetson.
+Increase fan speed by pressing 'p'. Reduce fan speed by pressing 'm'.
+Overclock GPU by pressing 's'.
+Select 'MAXN' mode by clicking on it. 
 
-* These commands are found/referred in this [forum post](https://forums.developer.nvidia.com/t/nvpmodel-and-jetson-clocks/58659/2)
+
+* These commands are found/referred in this [repo](https://github.com/rbonghi/jetson_stats/wiki/jtop)
 * Please ensure the jetson device is cooled appropriately to prevent overheating
 
-### Parameters
 
-- str model = "yolov3" or "yolov3_tiny" 
-- str model_path = "/abs_path_to_model/"
-- int input_shape = 288/416/608
-- int category_num = 8
-- double conf_th = 0.5
-- bool show_img = True
 
-- Default Input FPS from CSI camera = 30.0
-* To change this, go to jetson-inference/utils/camera/gstCamera.cpp 
-
-``` 
-# In line 359, change this line
-mOptions.frameRate = 15
-
-# To desired frame_rate
-mOptions.frameRate = desired_frame_rate
-``` 
 ---
 ## Results obtained
 
@@ -159,11 +160,9 @@ mOptions.frameRate = desired_frame_rate
 
    | Model    | Hardware |    FPS    |  Inference Time (ms)  | 
    |:---------|:--:|:---------:|:----------------:|
-   | Yolov4-416| Xavier AGX | 40.0 | 0.025 |
-   | Yolov4-416| Jetson Tx2 | 16.0 | 0.0625 |
+   | yolov3-416| Xavier AGX | 41.0 | 0.024 |
+   | yolov3_tiny-416| Xavier AGX | 102.6 | 0.0097 |
 
-   
-* Will be adding inference tests for YOLOv3/4 and YOLOv3-tiny/YOLOv4-tiny for different Jetson devices and multiple camera inputs inference tests in the future
 
 ### 1. Screenshots 
 
@@ -186,10 +185,10 @@ Many thanks for his project with tensorrt samples. I have referenced his source 
 
 I also used the pycuda and protobuf installation script from his project
 
-Those code are under [MIT License](https://github.com/jkjung-avt/tensorrt_demos/blob/master/LICENSE)
+Those codes are under [MIT License](https://github.com/jkjung-avt/tensorrt_demos/blob/master/LICENSE)
 
-### 2. Jetson-inference from [dusty-nv](https://github.com/dusty-nv/ros_deep_learning#jetson-inference)
+### 2. yolov4_trt_ros from [indra4837](https://github.com/indra4837/yolov4_trt_ros)
 
-Many thanks for his work on the Jetson Inference with ROS. I have used his video_source input from his project for capturing video inputs. 
+Many thanks to his work on creating most of what this package is built upon! The package is forked from his repository.
 
-Those code are under [NVIDIA License](https://github.com/dusty-nv/jetson-inference/blob/master/LICENSE.md) 
+Those codes are under [MIT License](https://github.com/indra4837/yolov4_trt_ros/blob/master/LICENSE)

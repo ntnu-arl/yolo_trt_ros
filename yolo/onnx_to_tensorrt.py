@@ -60,7 +60,7 @@ from yolo_to_onnx import DarkNetParser, get_h_and_w
 from plugins import add_yolo_plugins
 
 
-MAX_BATCH_SIZE = 3
+MAX_BATCH_SIZE = 1
 
 
 def load_onnx(model_name):

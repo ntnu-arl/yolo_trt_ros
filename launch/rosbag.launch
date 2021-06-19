@@ -8,7 +8,7 @@
 	"/>
 	<node pkg="rosbag" type="play" name="rosbag_play" output="screen" args="--clock --pause --start 60 $(arg bag_file)"/?>
 
-    <!-- ignore Play high frequency rosbag -->
+    <!-- Play high frequency rosbag -->
 	<param name="use_sim_time" value="true"/>
 	<arg name="bag_file" default="$(find /media/integration/xavier_sd/semester_project/rosbags)/artifacts_2021-05-07-17-09-09.bag"/>
 	<node pkg="rosbag" type="play" name="rosbag_play" output="screen" args="--clock --pause $(arg bag_file)"/>

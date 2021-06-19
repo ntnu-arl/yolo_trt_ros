@@ -1,7 +1,8 @@
+#!/usr/bin/env python2
+
 from __future__ import print_function
 
 import ctypes
-import os 
 
 import rospkg
 import numpy as np
@@ -24,11 +25,9 @@ except OSError as e:
 
 def _preprocess_yolo(img, input_shape):
     """Preprocess an image before TRT YOLO inferencing.
-
     # Args
         img: int8 numpy array of shape (img_h, img_w, 3)
         input_shape: a tuple of (H, W)
-
     # Returns
         preprocessed img: float32 numpy array of shape (3, H, W)
     """
@@ -43,7 +42,6 @@ def _nms_boxes(detections, nms_threshold):
     """Apply the Non-Maximum Suppression (NMS) algorithm on the bounding
     boxes with their confidence scores and return an array with the
     indexes of the bounding boxes we want to keep.
-
     # Args
         detections: Nx7 numpy arrays of
                     [[x, y, w, h, box_confidence, class_id, class_prob],
@@ -84,13 +82,11 @@ def _nms_boxes(detections, nms_threshold):
 
 def _postprocess_yolo(trt_outputs, img_w, img_h, conf_th, nms_threshold=0.5):
     """Postprocess TensorRT outputs.
-
     # Args
         trt_outputs: a list of 2 or 3 tensors, where each tensor
                     contains a multiple of 7 float32 numbers in
                     the order of [x, y, w, h, box_confidence, class_id, class_prob]
         conf_th: confidence threshold
-
     # Returns
         boxes, scores, classes (after NMS)
     """
@@ -235,6 +231,7 @@ class TrtYOLO(object):
         """Allocates all host/device in/out buffers required for an engine.
            Checked!
         """
+
         inputs = []
         outputs = []
         bindings = []
@@ -271,7 +268,7 @@ class TrtYOLO(object):
 
         return inputs, outputs, bindings, stream
 
-    def detect1(self, img, conf_th=0.3, batch_size=1):
+    def detect1(self, img, conf_th=0.3):
         """ Detect objects in the input image """
 
         img_resized = _preprocess_yolo(img, self.input_shape)
@@ -281,7 +278,7 @@ class TrtYOLO(object):
         # will copy the input to the GPU before executing.
         self.inputs[0].host = np.ascontiguousarray(img_resized)
 
-        #if self.cuda_ctx:
+        # if self.cuda_ctx:
         self.cuda_ctx.push()
 
         self.bindings = [int(i) for i in self.bindings]
@@ -296,7 +293,8 @@ class TrtYOLO(object):
         [cuda.memcpy_htod_async(inp.device, inp.host, stream)
          for inp in inputs]
         # Run inference.
-        context.execute_async(batch_size=batch_size, bindings=self.bindings, stream_handle=stream.handle)
+        context.execute_async_v2(
+            bindings=self.bindings, stream_handle=stream.handle)
         # Transfer predictions back from the GPU.
         [cuda.memcpy_dtoh_async(out.host, out.device, stream)
          for out in outputs]
@@ -318,7 +316,7 @@ class TrtYOLO(object):
         boxes[:, [1, 3]] = np.clip(boxes[:, [1, 3]], 0, img.shape[0]-1)
         return boxes, scores, classes
 
-    def detect2(self, img, conf_th=0.3, batch_size=1):
+    def detect2(self, img, conf_th=0.3):
         """ Detect objects in the input image """
 
         img_resized = _preprocess_yolo(img, self.input_shape)
@@ -328,7 +326,7 @@ class TrtYOLO(object):
         # will copy the input to the GPU before executing.
         self.inputs[0].host = np.ascontiguousarray(img_resized)
 
-        #if self.cuda_ctx:
+        # if self.cuda_ctx:
         self.cuda_ctx.push()
 
         self.bindings = [int(i) for i in self.bindings]
@@ -343,7 +341,8 @@ class TrtYOLO(object):
         [cuda.memcpy_htod_async(inp.device, inp.host, stream)
          for inp in inputs]
         # Run inference.
-        context.execute_async(batch_size=batch_size, bindings=self.bindings, stream_handle=stream.handle)
+        context.execute_async_v2(
+            bindings=self.bindings, stream_handle=stream.handle)
         # Transfer predictions back from the GPU.
         [cuda.memcpy_dtoh_async(out.host, out.device, stream)
          for out in outputs]
@@ -365,7 +364,7 @@ class TrtYOLO(object):
         boxes[:, [1, 3]] = np.clip(boxes[:, [1, 3]], 0, img.shape[0]-1)
         return boxes, scores, classes
 
-    def detect3(self, img, conf_th=0.3, batch_size=1):
+    def detect3(self, img, conf_th=0.3):
         """ Detect objects in the input image """
 
         img_resized = _preprocess_yolo(img, self.input_shape)
@@ -375,7 +374,7 @@ class TrtYOLO(object):
         # will copy the input to the GPU before executing.
         self.inputs[0].host = np.ascontiguousarray(img_resized)
 
-        #if self.cuda_ctx:
+        # if self.cuda_ctx:
         self.cuda_ctx.push()
 
         self.bindings = [int(i) for i in self.bindings]
@@ -390,7 +389,8 @@ class TrtYOLO(object):
         [cuda.memcpy_htod_async(inp.device, inp.host, stream)
          for inp in inputs]
         # Run inference.
-        context.execute_async(batch_size=batch_size, bindings=self.bindings, stream_handle=stream.handle)
+        context.execute_async_v2(
+            bindings=self.bindings, stream_handle=stream.handle)
         # Transfer predictions back from the GPU.
         [cuda.memcpy_dtoh_async(out.host, out.device, stream)
          for out in outputs]
@@ -412,8 +412,8 @@ class TrtYOLO(object):
         boxes[:, [1, 3]] = np.clip(boxes[:, [1, 3]], 0, img.shape[0]-1)
         return boxes, scores, classes
 
-    def detect4(self, img, conf_th=0.3, batch_size=1):
-        """Detect objects in the input image """
+    def detect4(self, img, conf_th=0.3):
+        """ Detect objects in the input image """
 
         img_resized = _preprocess_yolo(img, self.input_shape)
         trt_outputs = []
@@ -422,7 +422,7 @@ class TrtYOLO(object):
         # will copy the input to the GPU before executing.
         self.inputs[0].host = np.ascontiguousarray(img_resized)
 
-        #if self.cuda_ctx:
+        # if self.cuda_ctx:
         self.cuda_ctx.push()
 
         self.bindings = [int(i) for i in self.bindings]
@@ -437,7 +437,8 @@ class TrtYOLO(object):
         [cuda.memcpy_htod_async(inp.device, inp.host, stream)
          for inp in inputs]
         # Run inference.
-        context.execute_async(batch_size=batch_size, bindings=self.bindings, stream_handle=stream.handle)
+        context.execute_async_v2(
+            bindings=self.bindings, stream_handle=stream.handle)
         # Transfer predictions back from the GPU.
         [cuda.memcpy_dtoh_async(out.host, out.device, stream)
          for out in outputs]
