@@ -148,12 +148,12 @@ class yolov4(object):
         #self.framerate_publisher.publish(self.avg_fps)
         self.publisher(boxes, confs, clss, "Front Camera")
         
-        """
+        
         if self.show_img:
             cv_img = show_fps(cv_img, fps)
             cv2.imshow("Cam 1", cv_img)
             cv2.waitKey(1)
-        """
+        
         
         # converts back to ros_img type for publishing
         try:

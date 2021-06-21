@@ -123,12 +123,13 @@ Note: Run the launch files separately in different terminals
 # For YOLOv3 (single input)
 $ roslaunch yolov4_trt_ros yolov3_trt.launch
 
-# For YOLOv3 batch (single input)
-$ roslaunch yolov4_trt_ros yolov3_tiny_trt.launch
+# For YOLOv3 batch (multiple input)
+$ roslaunch yolov4_trt_ros yolov3_trt_batch.launch
 
 ```
 If using a rosbag, in a split terminal:
 ```
+$ source devel/setup.bash
 $ roslaunch yolov4_trt_node rosbag.launch
 ```
 
@@ -141,10 +142,10 @@ In a seperate terminal:
 ```
 $ jtop
 ```
-Press 5 to access the control tab of the Jetson.
-Increase fan speed by pressing 'p'. Reduce fan speed by pressing 'm'.
-Overclock GPU by pressing 's'.
-Select 'MAXN' mode by clicking on it. 
+* Press 5 to access the control tab of the Jetson:
+   * Increase fan speed by pressing 'p'. Reduce fan speed by pressing 'm'.
+   * Overclock GPU by pressing 's'.
+   * Select 'MAXN' mode by clicking on it. 
 
 
 * These commands are found/referred in this [repo](https://github.com/rbonghi/jetson_stats/wiki/jtop)
