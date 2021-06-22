@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(yolov4_trt_ros)
+project(yolo_trt_ros)
 
 find_package(OpenCV 4.2.0 REQUIRED
     	PATHS /usr/local
@@ -29,7 +29,7 @@ add_message_files(FILES
 
 catkin_python_setup()
 
-#generate_messages(DEPENDENCIES std_msgs vision_msgs)
+generate_messages(DEPENDENCIES std_msgs vision_msgs)
 	 
 catkin_package(
   CATKIN_DEPENDS 

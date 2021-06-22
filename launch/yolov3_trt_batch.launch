@@ -2,15 +2,15 @@
 
 <launch>
 	 <!-- ROS and network parameter files -->
-  	<arg name="ros_param_file"             default="$(find yolov4_trt_ros)/config/ros.yaml"/>
-  	<arg name="network_param_file"         default="$(find yolov4_trt_ros)/config/yolov3.yaml"/>
+  	<arg name="ros_param_file"             default="$(find yolo_trt_ros)/config/ros.yaml"/>
+  	<arg name="network_param_file"         default="$(find yolo_trt_ros)/config/yolov3.yaml"/>
 
 	<!-- rqt dashboard-->>
   	<node name = "my_rqt_dashboard" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen" 
-		  args = "--perspective-file $(find yolov4_trt_ros)/config/yolov4_trt_ros.perspective"/>
+		  args = "--perspective-file $(find yolo_trt_ros)/config/yolo_trt_ros.perspective"/>
 	
-	<!-- yolov4_trt_node -->
-	<node pkg="yolov4_trt_ros" type="trt_yolo_v3_batch.py" name="yolov4_trt_node_batch" output="screen">
+	<!-- yolo_trt_node -->
+	<node pkg="yolo_trt_ros" type="trt_yolo_v3_batch.py" name="yolo_trt_node_batch" output="screen">
 		<rosparam command="load" file="$(arg ros_param_file)"/>
 		<rosparam command="load" file="$(arg network_param_file)"/>
 	</node>

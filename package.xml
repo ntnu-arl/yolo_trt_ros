@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>yolov4_trt_ros</name>
+  <name>yolo_trt_ros</name>
   <version>0.0.0</version>
-  <description>The yolov4_trt_ros package</description>
+  <description>The yolo_trt_ros package</description>
 
   <maintainer email="e0175651@u.nus.edu">indra</maintainer>
 

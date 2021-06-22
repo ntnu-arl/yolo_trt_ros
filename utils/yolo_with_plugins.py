@@ -12,7 +12,7 @@ import pycuda.driver as cuda
 import pycuda.autoinit
 
 rospack = rospkg.RosPack()
-plugin_path = rospack.get_path("yolov4_trt_ros") + "/plugins/libyolo_layer.so"
+plugin_path = rospack.get_path("yolo_trt_ros") + "/plugins/libyolo_layer.so"
 
 try:
     ctypes.cdll.LoadLibrary(plugin_path)

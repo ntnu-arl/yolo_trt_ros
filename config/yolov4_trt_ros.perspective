@@ -284,7 +284,7 @@
               "keys": {
                 "publishers": {
                   "type": "repr",
-                  "repr": "u\"[{'topic_name': '/bounding_boxes', 'type_name': 'yolov4_trt_ros/Detector2DArray', 'enabled': False, 'rate': 1.0, 'expressions': {}, 'publisher_id': 0, 'counter': 0}]\""
+                  "repr": "u\"[{'topic_name': '/bounding_boxes', 'type_name': 'yolo_trt_ros/Detector2DArray', 'enabled': False, 'rate': 1.0, 'expressions': {}, 'publisher_id': 0, 'counter': 0}]\""
                 }
               },
               "groups": {}

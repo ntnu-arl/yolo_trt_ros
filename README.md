@@ -1,6 +1,6 @@
 # YOLOv3 with TensorRT engine
 
-This package contains the yolov4_trt_node that performs object detection with YOLOv3 using NVIDIA's TensorRT engine
+This package contains the yolo_trt_node that performs object detection with YOLOv3 using NVIDIA's TensorRT engine
 
 
 <!--![Video_Result2](docs/results.gif)-->
@@ -30,11 +30,11 @@ This package contains the yolov4_trt_node that performs object detection with YO
 
 ```
 Install pycuda (takes a while)
-$ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/dependencies
+$ cd ${HOME}/catkin_ws/src/yolo_trt_ros/dependencies
 $ ./install_pycuda.sh
 
 Install Protobuf (takes a while)
-$ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/dependencies
+$ cd ${HOME}/catkin_ws/src/yolo_trt_ros/dependencies
 $ ./install_protobuf-3.8.0.sh
 
 Install onnx (depends on Protobuf above)
@@ -54,7 +54,7 @@ $ source devel/setup.bash
 ### 2. Make libyolo_layer.so
 
 ```
-$ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/plugins
+$ cd ${HOME}/catkin_ws/src/yolo_trt_ros/plugins
 $ make
 ```
 
@@ -63,7 +63,7 @@ This will generate a libyolo_layer.so file.
 ### 3. Place your yolo.weights and yolo.cfg file in the yolo folder
 
 ```
-$ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/yolo
+$ cd ${HOME}/catkin_ws/src/yolo_trt_ros/yolo
 ```
 ** Please name the yolov3.weights and yolov3.cfg file as follows:
 - yolov3-416.weights
@@ -82,7 +82,7 @@ $ ./convert_yolo_trt
 ### 4. Change the class labels
 
 ```
-$ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/utils
+$ cd ${HOME}/catkin_ws/src/yolo_trt_ros/utils
 $ vim yolo_classes.py
 ```
 
@@ -91,7 +91,7 @@ $ vim yolo_classes.py
 ### 5. Change the *.yaml parameters
 
 ```
-$ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/config
+$ cd ${HOME}/catkin_ws/src/yolo_trt_ros/config
 ```
 
 - `ros.yaml` : change the camera topic names. `yolov3_trt.launch` only subscribes to the front camera topic. `yolov3_trt_batch.launch` subscribes to all 4 camera topics.
@@ -108,7 +108,7 @@ $ cd ${HOME}/catkin_ws/src/yolov4_trt_ros/config
 <em>OPTIONAL: if running on rosbag</em>
 
 ```
-$ cd ${HOME}/catkin_ws/src/yolov4_trt_node/launch
+$ cd ${HOME}/catkin_ws/src/yolo_trt_node/launch
 ```
 - `rosbag.launch` : change rosbag path
 ---
@@ -121,16 +121,16 @@ Note: Run the launch files separately in different terminals
 ### 1. Run the yolo detector
 ```
 # For YOLOv3 (single input)
-$ roslaunch yolov4_trt_ros yolov3_trt.launch
+$ roslaunch yolo_trt_ros yolov3_trt.launch
 
 # For YOLOv3 batch (multiple input)
-$ roslaunch yolov4_trt_ros yolov3_trt_batch.launch
+$ roslaunch yolo_trt_ros yolov3_trt_batch.launch
 
 ```
 If using a rosbag, in a split terminal:
 ```
 $ source devel/setup.bash
-$ roslaunch yolov4_trt_node rosbag.launch
+$ roslaunch yolo_trt_node rosbag.launch
 ```
 
 
@@ -171,11 +171,11 @@ $ jtop
 ### Tests Done on Xavier AGX
 ### Avg FPS : ~38 FPS
 
-![Video_Result1](docs/yolov4_custom_1.png)
+![Video_Result1](docs/yolo_custom_1.png)
 
-![Video_Result2](docs/yolov4_custom_2.png)
+![Video_Result2](docs/yolo_custom_2.png)
 
-![Video_Result3](docs/yolov4_custom_3.png)
+![Video_Result3](docs/yolo_custom_3.png)
 
 ---
 ## Licenses and References
@@ -188,8 +188,8 @@ I also used the pycuda and protobuf installation script from his project
 
 Those codes are under [MIT License](https://github.com/jkjung-avt/tensorrt_demos/blob/master/LICENSE)
 
-### 2. yolov4_trt_ros from [indra4837](https://github.com/indra4837/yolov4_trt_ros)
+### 2. yolo_trt_ros from [indra4837](https://github.com/indra4837/yolo_trt_ros)
 
 Many thanks to his work on creating most of what this package is built upon! The package is forked from his repository.
 
-Those codes are under [MIT License](https://github.com/indra4837/yolov4_trt_ros/blob/master/LICENSE)
+Those codes are under [MIT License](https://github.com/indra4837/yolo_trt_ros/blob/master/LICENSE)
