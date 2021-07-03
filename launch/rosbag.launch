@@ -18,7 +18,4 @@
 	<arg name="bag_file" default="$(find /media/integration/xavier_sd/semester_project/rosbags)/backpack_helmet_2021-03-03-19-11-21.bag"/>
 	<node pkg="rosbag" type="play" name="rosbag_play" output="screen" args="--clock --pause $(arg bag_file)"/?>
 
-	<?ignore record rosbag-->
-	<node pkg="rosbag" type="record" name="final_presentation_recording" output="screen"
-	args="record -o /media/integration/xavier_sd/semester_project/rosbags/final_presentation_recording --duration=15 /alphasense_driver_ros/cam4/dropped/debayered"/?>
 </launch>
