@@ -1,7 +1,7 @@
 echo "Are you using YOLOv3-tiny ? [y/n]"
 read tiny
 
-if [[ $tiny == 'y' || 'Y' ]]
+if [ $tiny == 'y' ]
 then
     yolo_type="_tiny"
 else
@@ -11,7 +11,7 @@ fi
 echo "What is the input shape? Input 288 or 416 or 608"
 read input_shape
 
-if [[ $tiny == 'y' || 'Y' ]]
+if [ $tiny == 'y' ]
 then
     if [[ $input_shape == 288 ]]
     then
@@ -52,7 +52,7 @@ else
     fi
 fi
 
-echo "How many categories are there?"
+echo "How many object categories can your model detect?"
 read category_num
 model_name="yolov3${yolo_type}-${input_shape}"
 
