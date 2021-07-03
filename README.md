@@ -53,14 +53,21 @@ A few modifications to the package must be made to build it with OpenCV 4:
 1. Add set (CMAKE_CXX_STANDARD 11) to your top level cv_bridge cmake
 2. In cv_bridge/src CMakeLists.txt line 35 change to if (OpenCV_VERSION_MAJOR VERSION_EQUAL 4)
 3. In cv_bridge/src/module_opencv3.cpp change signature of function
+   ```
    UMatData* allocate(int dims0, const int* sizes, int type, void* data, size_t* step, int flags, UMatUsageFlags usageFlags) const
+   ```
    to
+   ```
    UMatData* allocate(int dims0, const int* sizes, int type, void* data, size_t* step, AccessFlag flags, UMatUsageFlags usageFlags) const
+   ```
 4. Still in cv_bridge/src/module_opencv3.cpp change signature of function
+   ```
    bool allocate(UMatData* u, int accessFlags, UMatUsageFlags usageFlags) const
+   ```
    to
+   ```
    bool allocate(UMatData* u, AccessFlag accessFlags, UMatUsageFlags usageFlags) const
-
+   ```
 
 
 ---
