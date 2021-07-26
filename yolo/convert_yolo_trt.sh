@@ -8,7 +8,7 @@ else
     yolo_type=""
 fi
 
-echo "What is the input shape? Input 288 or 416 or 608"
+echo "What is the input shape? Input 288, 416 or 608"
 read input_shape
 
 if [ $tiny == 'y' ]
@@ -56,10 +56,20 @@ echo "How many object categories can your model detect?"
 read category_num
 model_name="yolov3${yolo_type}-${input_shape}"
 
+echo "What maximum batch size does your engine need? Input a power of 2 (1, 4, 8, 16, etc)"
+read max_batch_size
+
 # convert from yolo to onnx
-python3 yolo_to_onnx.py -m $model_name -c $category_num
+python3 yolo_to_onnx.py -m $model_name -c $category_num 
 
 echo "Done converting to .onnx"
+echo "..."
+echo "Now converting to .trt"
+
+# convert from onnx to trt
+python3 onnx_to_tensorrt.py -m $model_name -c $category_num -b max_batch_size --verbose
+
+echo "Conversion from yolo to trt done!"
 echo "..."
 echo "Now converting to .trt"
 
