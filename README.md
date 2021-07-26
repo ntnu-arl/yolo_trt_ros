@@ -44,10 +44,9 @@ $ sudo pip3 install onnx==1.4.1
 ### Build vision_opencv from source
 ROS Melodic depends on OpenCV 3 but Jetpack 4.5.1 depends on OpenCV 4. Thus, the ROS packages used that depend on OpenCV must be built from source
 
-```
 Clone the vision_opencv package from the 'melodic' branch  https://github.com/ros-perception/vision_opencv/tree/melodic
+```
 git clone -b melodic --single-branch git@github.com:ros-perception/vision_opencv.git
-
 ```
 A few modifications to the package must be made to build it with OpenCV 4:
 1. Add set (CMAKE_CXX_STANDARD 11) to your top level cv_bridge cmake
@@ -94,7 +93,7 @@ This will generate a libyolo_layer.so file.
 ```
 $ cd ${HOME}/catkin_ws/src/yolo_trt_ros/yolo
 ```
-**Please name the yolov3.weights and yolov3.cfg file as follows:
+**Please name the yolov3.weights and yolov3.cfg file as follows:**
 - yolov3.weights
 - yolov3.cfg
 
@@ -104,16 +103,19 @@ Run the conversion script to convert to TensorRT engine file
 $ ./convert_yolo_trt
 ```
 
-- Input the appropriate arguments
-- This conversion might take awhile
-- The optimised TensorRT engine would now be saved as yolov3-416.trt / yolov3-416.trt
+- Input the appropriate arguments:
+   - *input_shape* is the input shape of the yolo network 
+   - *max_batch_size* is the maximum batch size of the TensorRT engine. The resulting engine will be able to infer images with a batch size smaller or equal than *max_batch_size*. For example, if *max_batch_szie* is set to 8, the resulting engine will be able to infer images with a batch size of 1, 2, 4 and 8. A runtime batch size equal to the *max_batch_size* will yield optimal performances. Smaller runtime batch sizes will work but with a sub-optimal framerate. 
+   If you are sure of the batch size you will use at runtime, set *max_batch_size* to this value. This will yield optimal performances. If you are unsure about your runtime batch size, set *max_batch_size* to a large power of 2. 
+- This conversion might take a while
+- The optimised TensorRT engine would now be saved as yolov3-416.trt (if 416 is the input shape)
 
 If convert_yolo_trt script doesn't work, create the weights manually:
 
 ```
 $ cd ${HOME}/catkin_ws/src/yolo_trt_ros/yolo
 ```
-**Please name the yolov3.weights and yolov3.cfg file as follows:
+**Please name the yolov3.weights and yolov3.cfg file as follows:**
 - yolov3-416.weights
 - yolov3-416.cfg
 (replace 416 with your network input shape: '288', '416' or '608')
@@ -130,10 +132,10 @@ This step should take around a minute (depending on the size of the weight file)
 
 ```
 For yolov3:
-$ python3 onnx_to_tensorrt.py -m yolov3-<input_shape> -c <category_num>
+$ python3 onnx_to_tensorrt.py -m yolov3-<input_shape> -c <category_num> -b <max_batch_size>
 
 For yolov3-tiny:
-$ python3 onnx_to_tensorrt.py -m yolov3_tiny-<input_shape> -c <category_num>
+$ python3 onnx_to_tensorrt.py -m yolov3_tiny-<input_shape> -c <category_num> -b <max_batch_size>
 ```
 
 This step should take a few minutes. Feel free to grab a coffee while the engine is being created.
