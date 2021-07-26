@@ -56,7 +56,7 @@ echo "How many object categories can your model detect?"
 read category_num
 model_name="yolov3${yolo_type}-${input_shape}"
 
-echo "What maximum batch size does your engine need? Input a power of 2 (1, 4, 8, 16, etc)"
+echo "What maximum batch size does your engine need? The resulting engine will be able to infer images with a batch size smaller or equal than the value you set. Input a power of 2 (1, 4, 8, 16, etc)"
 read max_batch_size
 
 # convert from yolo to onnx
