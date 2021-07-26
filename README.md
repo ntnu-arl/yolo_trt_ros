@@ -122,7 +122,7 @@ $ cd ${HOME}/catkin_ws/src/yolo_trt_ros/yolo
 
 ```
 For yolov3:
-$ python3 yolo_to_onnx.py -m yolov3-<input_shape> -c <category_num>
+$ python3 yolo_to_onnx.py -m yolov3-<input_shape> -c <category_num> --verbose
 
 For yolov3-tiny:
 $ python3 yolo_to_onnx.py -m yolov3_tiny-<input_shape> -c <category_num> --verbose
@@ -132,10 +132,10 @@ This step should take around a minute (depending on the size of the weight file)
 
 ```
 For yolov3:
-$ python3 onnx_to_tensorrt.py -m yolov3-<input_shape> -c <category_num> -b <max_batch_size>
+$ python3 onnx_to_tensorrt.py -m yolov3-<input_shape> -c <category_num> -b <max_batch_size> --verbose
 
 For yolov3-tiny:
-$ python3 onnx_to_tensorrt.py -m yolov3_tiny-<input_shape> -c <category_num> -b <max_batch_size>
+$ python3 onnx_to_tensorrt.py -m yolov3_tiny-<input_shape> -c <category_num> -b <max_batch_size> --verbose
 ```
 
 This step should take a few minutes. Feel free to grab a coffee while the engine is being created.
