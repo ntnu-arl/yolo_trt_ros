@@ -108,7 +108,7 @@ $ ./convert_yolo_trt
    - *max_batch_size* is the maximum batch size of the TensorRT engine. The resulting engine will be able to infer images with a batch size smaller or equal than *max_batch_size*. For example, if *max_batch_szie* is set to 8, the resulting engine will be able to infer images with a batch size of 1, 2, 4 and 8. A runtime batch size equal to the *max_batch_size* will yield optimal performances. Smaller runtime batch sizes will work but with a sub-optimal framerate. 
    If you are sure of the batch size you will use at runtime, set *max_batch_size* to this value. This will yield optimal performances. If you are unsure about your runtime batch size, set *max_batch_size* to a large power of 2. 
 - This conversion might take a while
-- The optimised TensorRT engine would now be saved as yolov3-416.trt (if 416 is the input shape)
+- The optimised TensorRT engine would now be saved as yolov3-<input_shape>.trt
 
 If convert_yolo_trt script doesn't work, create the weights manually:
 
