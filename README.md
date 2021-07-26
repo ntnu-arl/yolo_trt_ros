@@ -94,9 +94,9 @@ This will generate a libyolo_layer.so file.
 ```
 $ cd ${HOME}/catkin_ws/src/yolo_trt_ros/yolo
 ```
-** Please name the yolov3.weights and yolov3.cfg file as follows:
-- yolov3-416.weights
-- yolov3-416.cfg
+**Please name the yolov3.weights and yolov3.cfg file as follows:
+- yolov3.weights
+- yolov3.cfg
 
 Run the conversion script to convert to TensorRT engine file
 
@@ -113,6 +113,10 @@ If convert_yolo_trt script doesn't work, create the weights manually:
 ```
 $ cd ${HOME}/catkin_ws/src/yolo_trt_ros/yolo
 ```
+**Please name the yolov3.weights and yolov3.cfg file as follows:
+- yolov3-416.weights
+- yolov3-416.cfg
+(replace 416 with your network input shape: '288', '416' or '608')
 
 ```
 For yolov3:
