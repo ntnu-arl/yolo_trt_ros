@@ -161,8 +161,8 @@ $ cd ${HOME}/catkin_ws/src/yolo_trt_ros/config
 - `yolov3.yaml` : change parameters accordingly:
    - str model = 'yolov3' or 'yolov3_tiny' 
    - int input_shape = '288' or '416' or '608'
-   - int category_num = 8
-   - int batch_size = 1 or 4
+   - int category_num = 8 (for SubT)
+   - int batch_size = A power of 2 (1, 2, 4, 8, etc) smaller or equal than the *max_batch_size* chosen when creating the TensorRT engine.
    - double confidence_threshold = 0.3
 
 ### 6. Change the rosbag 
