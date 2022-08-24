@@ -51,3 +51,4 @@ def get_gpu_archs():
 
 if __name__ == '__main__':
     print(' '.join(get_gpu_archs()))
+

@@ -1,12 +1,12 @@
 CLASSES_LIST = [
-    'survivor',
-    'fire extinguisher',
-    'cellphone',
-    'drill',
-    'backpack',
-    'vent',
-    'helmet', 
-    'rope',
+    'Survivor',
+    'Fire Extinguisher',
+    'Cell Phone',
+    'Drill',
+    'Backpack',
+    'Vent',
+    'Helmet',
+    'Rope',
 ]
 
 def get_cls_dict(category_num):
@@ -15,3 +15,7 @@ def get_cls_dict(category_num):
         return {i: n for i, n in enumerate(CLASSES_LIST)}
     else:
         return {i: 'CLS%d' % i for i in range(category_num)}
+def get_class_name(class_num):
+    if class_num >= len(CLASSES_LIST):
+        return "UNKNOWN"
+    return CLASSES_LIST[class_num]

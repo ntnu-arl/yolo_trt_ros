@@ -59,7 +59,7 @@ import onnx
 from onnx import helper, TensorProto
 
 
-MAX_BATCH_SIZE = 1
+MAX_BATCH_SIZE = 1 #4
 
 def parse_args():
     """Parse command-line arguments."""
@@ -969,8 +969,8 @@ def main():
         weights_file_path=weights_file_path,
         verbose=True)
 
-    print('Checking ONNX model...')
-    onnx.checker.check_model(yolo_model_def)
+    # print('Checking ONNX model...')
+    # onnx.checker.check_model(yolo_model_def)
 
     print('Saving ONNX file...')
     onnx.save(yolo_model_def, output_file_path)

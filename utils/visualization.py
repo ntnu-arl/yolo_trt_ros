@@ -12,8 +12,8 @@ import cv2
 # Constants
 ALPHA = 0.5
 FONT = cv2.FONT_HERSHEY_PLAIN
-TEXT_SCALE = 1.0
-TEXT_THICKNESS = 1
+TEXT_SCALE = 1.5
+TEXT_THICKNESS = 2
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
@@ -40,7 +40,7 @@ def gen_colors(num_colors):
     return bgrs
 
 
-def draw_boxed_text(img, text, topleft, color):
+def draw_boxed_text(img, text, topleft, bb_size, color):
     """Draw a transluent boxed text in white, overlayed on top of a
     colored patch surrounded by a black border. FONT, TEXT_SCALE,
     TEXT_THICKNESS and ALPHA values are constants (fixed) as defined
@@ -59,7 +59,7 @@ def draw_boxed_text(img, text, topleft, color):
     img_h, img_w, _ = img.shape
     if topleft[0] >= img_w or topleft[1] >= img_h:
         return img
-    margin = 3
+    margin = 5
     size = cv2.getTextSize(text, FONT, TEXT_SCALE, TEXT_THICKNESS)
     w = size[0][0] + margin * 2
     h = size[0][1] + margin * 2
@@ -69,11 +69,25 @@ def draw_boxed_text(img, text, topleft, color):
     cv2.putText(patch, text, (margin+1, h-margin-2), FONT, TEXT_SCALE,
                 WHITE, thickness=TEXT_THICKNESS, lineType=cv2.LINE_8)
     cv2.rectangle(patch, (0, 0), (w-1, h-1), BLACK, thickness=1)
-    w = min(w, img_w - topleft[0])  # clip overlay at image boundary
-    h = min(h, img_h - topleft[1])
+    # x
+    if (topleft[0] + w > img_w and topleft[0]+bb_size[0]-w >= 0):
+      x_min = topleft[0]+bb_size[0]-w
+    else:
+      x_min = topleft[0]
+    # y
+    if (topleft[1]+bb_size[1]/2 < img_h/2 and topleft[1]+bb_size[1]+h < img_h): # if center point in upper half, text below bounding box.
+      y_min = topleft[1]+bb_size[1]
+    elif (topleft[1]-h >= 0):
+      y_min = topleft[1]-h
+    else:
+      y_min = topleft[1]
+    w = min(w, img_w - x_min)
+    h = min(h, img_h - y_min)
+    
     # Overlay the boxed text onto region of interest (roi) in img
-    roi = img[topleft[1]:topleft[1]+h, topleft[0]:topleft[0]+w, :]
+    roi = img[y_min:y_min+h, x_min:x_min+w, :]
     cv2.addWeighted(patch[0:h, 0:w, :], ALPHA, roi, 1 - ALPHA, 0, roi)
+    
     return img
 
 
@@ -94,9 +108,10 @@ class BBoxVisualization():
             cl = int(cl)
             x_min, y_min, x_max, y_max = bb[0], bb[1], bb[2], bb[3]
             color = self.colors[cl]
-            cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color, 2)
-            txt_loc = (max(x_min+2, 0), max(y_min+2, 0))
+            cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color, 3)
+            txt_loc = (max(x_min, 0), max(y_min, 0))
+            bb_size = ((bb[2]-bb[0]), (bb[3]-bb[1]))
             cls_name = self.cls_dict.get(cl, 'CLS{}'.format(cl))
             txt = '{} {:.2f}'.format(cls_name, cf)
-            img = draw_boxed_text(img, txt, txt_loc, color)
+            img = draw_boxed_text(img, txt, txt_loc, bb_size, color)
         return img

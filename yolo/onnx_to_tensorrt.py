@@ -60,6 +60,8 @@ from yolo_to_onnx import DarkNetParser, get_h_and_w
 from plugins import add_yolo_plugins
 
 
+MAX_BATCH_SIZE = 1 #4
+
 
 def load_onnx(model_name):
     """Read the ONNX file."""
@@ -74,6 +76,7 @@ def load_onnx(model_name):
 
 def set_net_batch(network, batch_size):
     """Set network input batch size.
+
     The ONNX file might have been generated with a different batch size,
     say, 64.
     """
@@ -84,7 +87,7 @@ def set_net_batch(network, batch_size):
     return network
 
 
-def build_engine(model_name, do_int8, dla_core, verbose=False, MAX_BATCH_SIZE):
+def build_engine(model_name, do_int8, dla_core, verbose=False):
     """Build a TensorRT engine from ONNX using the older API."""
     cfg_file_path = model_name + '.cfg'
     parser = DarkNetParser()
@@ -174,9 +177,6 @@ def main():
               '{dimension} could be either a single number (e.g. '
               '288, 416, 608) or 2 numbers, WxH (e.g. 416x256)'))
     parser.add_argument(
-        '-b', '--max_batch_size', type='int', default=4,
-        help='maximum batch size of the TensorRT engine')
-    parser.add_argument(
         '--int8', action='store_true',
         help='build INT8 TensorRT engine')
     parser.add_argument(
@@ -185,7 +185,7 @@ def main():
     args = parser.parse_args()
 
     engine = build_engine(
-        args.model, args.int8, args.dla_core, args.verbose, args.max_batch_size)
+        args.model, args.int8, args.dla_core, args.verbose)
     if engine is None:
         raise SystemExit('ERROR: failed to build the TensorRT engine!')
 

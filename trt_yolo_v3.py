@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import time
@@ -21,6 +21,7 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import Int8
 from cv_bridge import CvBridge, CvBridgeError
 
+import numpy as np
 
 class yolo(object):
     def __init__(self):
@@ -53,22 +54,23 @@ class yolo(object):
         
         rospack = rospkg.RosPack()
         package_path = rospack.get_path("yolo_trt_ros")
-        self.camera_topic_name = rospy.get_param("/yolo_trt_node/subscribers/camera_reading/topic_front", "alphasense_driver_ros/cam4/dropped/debayered")
-        self.camera_queue_size = rospy.get_param("/yolo_trt_node/subscribers/camera_reading/queue_size", 1)
-        self.img_dim = rospy.get_param("/yolo_trt_node/subscribers/camera_resolution", 720*540*3)
+        self.camera_topic_name = rospy.get_param("/yolo_trt_node/subscribers/in_topics", "/d455/color/image_raw")
+        self.camera_queue_size = rospy.get_param("/yolo_trt_node/subscribers/queue_size", 1)
+        self.img_dim = rospy.get_param("/yolo_trt_node/subscribers/camera_resolution", 480*270*3)
+        print('self.img_dim:', self.img_dim)
         self.object_detector_topic_name = rospy.get_param("/yolo_trt_node/publishers/object_detector/topic", "/detected_objects")
         self.object_detector_queue_size = rospy.get_param("/yolo_trt_node/publishers/object_detector/queue_size", 1)
         self.bounding_boxes_topic_name = rospy.get_param("/yolo_trt_node/publishers/bounding_boxes/topic", "/bounding_boxes")
         self.bounding_boxes_queue_size = rospy.get_param("/yolo_trt_node/publishers/bounding_boxes/queue_size", 1)
-        self.detection_image_topic_name = rospy.get_param("/yolo_trt_node/publishers/detection_image/topic", "/detection_image")
+        self.detection_image_topic_name = "/detection_image" #rospy.get_param("/yolo_trt_node/publishers/detection_image/topic", "/detection_image")
         self.detection_image_queue_size = rospy.get_param("/yolo_trt_node/publishers/detection_image/queue_size", 1)
 
         self.model = rospy.get_param("/yolo_trt_node/yolo_model/model/name", "yolov3")
         self.model_path = rospy.get_param("yolo_trt_node/yolo_model/model_path", package_path + "/yolo/")
         self.input_shape = rospy.get_param("/yolo_trt_node/yolo_model/input_shape/value", "416")
         self.category_num = rospy.get_param("/yolo_trt_node/yolo_model/category_number/value", 8)
-        self.conf_th = rospy.get_param("/yolo_trt_node/yolo_model/confidence_threshold/value", 0.2)
-        self.batch_size = rospy.get_param("/yolo_trt_node/yolo_model/batch_size/value", 1)
+        self.conf_th = 0.2 #rospy.get_param("/yolo_trt_node/yolo_model/confidence_threshold/value", 0.2)
+        self.batch_size = 1 #rospy.get_param("/yolo_trt_node/yolo_model/batch_size/value", 1)
         self.show_img = rospy.get_param("/yolo_trt_node/image_view/enable_opencv", True)
 
 
@@ -113,12 +115,14 @@ class yolo(object):
         self.iter = self.iter + 1 
 
         # converts from ros_img to cv_img for processing
-        try:
-            cv_img = self.bridge.imgmsg_to_cv2(
-                ros_img, desired_encoding="bgr8")
-            rospy.logdebug("ROS Image converted for processing")
-        except CvBridgeError as e:
-            rospy.loginfo("Failed to convert image %s", str(e))
+        # try:
+        #     cv_img = self.bridge.imgmsg_to_cv2(
+        #         ros_img, desired_encoding="bgr8")
+        #     rospy.logdebug("ROS Image converted for processing")
+        # except CvBridgeError as e:
+        #     rospy.loginfo("Failed to convert image %s", str(e))
+        img = np.ndarray((ros_img.height, ros_img.width, 3), 'B', ros_img.data, 0)
+        cv_img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
         if cv_img is not None:
             boxes, confs, clss = self.trt_yolo.detect(cv_img, self.conf_th, self.batch_size)
@@ -128,7 +132,7 @@ class yolo(object):
             toc = time.time()
             fps = 1.0 / (toc - tic)
             self.avg_fps = self.avg_fps*(self.iter-1)/self.iter + fps/self.iter
-            print(self.avg_fps)
+            print('fps:', self.avg_fps)
 
 
             self.publisher(boxes, confs, clss)
@@ -139,13 +143,21 @@ class yolo(object):
                 cv2.waitKey(1)
 
         # converts back to ros_img type for publishing
-        try:
-            overlay_img = self.bridge.cv2_to_imgmsg(
-                cv_img, encoding="bgr8")
-            rospy.logdebug("CV Image converted for publishing")
-            self.detection_image_publisher.publish(overlay_img)
-        except CvBridgeError as e:
-            rospy.loginfo("Failed to convert image %s", str(e))
+        mask_msg = Image()
+        mask_msg.height = ros_img.height
+        mask_msg.width = ros_img.width
+        mask_msg.encoding = 'bgr8'
+        mask_msg.is_bigendian = 0
+        mask_msg.step = mask_msg.width * 3 # 3 bytes for each pixel
+        mask_msg.data = np.reshape(cv_img, (ros_img.height * ros_img.width * 3,)).tolist()
+        self.detection_image_publisher.publish(mask_msg)
+        # try:
+        #     overlay_img = self.bridge.cv2_to_imgmsg(
+        #         cv_img, encoding="bgr8")
+        #     rospy.logdebug("CV Image converted for publishing")
+        #     self.detection_image_publisher.publish(overlay_img)
+        # except CvBridgeError as e:
+        #     rospy.loginfo("Failed to convert image %s", str(e))
 
     def publisher(self, boxes, confs, clss):
         """ Publishes to detector_msgs
