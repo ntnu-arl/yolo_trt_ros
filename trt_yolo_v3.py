@@ -2,6 +2,7 @@
 
 import os
 import time
+import collections
 
 import cv2
 import pycuda.autoinit  # For initializing CUDA driver
@@ -19,7 +20,8 @@ from yolo_trt_ros.msg import Detector2D
 from yolo_trt_ros.msg import BoundingBox2D
 from sensor_msgs.msg import Image
 from std_msgs.msg import Int8
-from cv_bridge import CvBridge, CvBridgeError
+from std_srvs.srv import SetBool, SetBoolResponse
+# from cv_bridge import CvBridge, CvBridgeError
 
 import numpy as np
 
@@ -27,7 +29,7 @@ class yolo(object):
     def __init__(self):
         """ Constructor """
 
-        self.bridge = CvBridge()
+        # self.bridge = CvBridge()
         self.init_params()
         self.init_yolo()
         self.cuda_ctx = cuda.Device(0).make_context()
@@ -73,7 +75,7 @@ class yolo(object):
         self.batch_size = 1 #rospy.get_param("/yolo_trt_node/yolo_model/batch_size/value", 1)
         self.show_img = rospy.get_param("/yolo_trt_node/image_view/enable_opencv", True)
 
-
+        self.color_queue = collections.deque(maxlen=1)
         self.image_sub = rospy.Subscriber(
             self.camera_topic_name, Image, self.img_callback, queue_size=self.camera_queue_size, buff_size=self.img_dim)
         self.bounding_boxes_publisher = rospy.Publisher(
@@ -82,9 +84,12 @@ class yolo(object):
             self.detection_image_topic_name, Image, queue_size=self.detection_image_queue_size)
         self.object_publisher = rospy.Publisher(
             self.object_detector_topic_name, Int8, queue_size=self.object_detector_queue_size)
-        
+        self.mask_publisher = rospy.Publisher('/current_mask', Image, queue_size=1)        
+        self.start_detector_srv = rospy.Service('/start_detector', SetBool, self.start_yolo)
+
         self.iter = 0
         self.avg_fps = 0
+        self.run_yolo = False
 
     def init_yolo(self):
         """ Initialises yolo parameters required for trt engine """
@@ -109,55 +114,13 @@ class yolo(object):
 
 
     def img_callback(self, ros_img):
-        """Continuously capture images from camera and do object detection """
+        self.color_queue.appendleft(ros_img)
 
-        tic = time.time()
-        self.iter = self.iter + 1 
-
-        # converts from ros_img to cv_img for processing
-        # try:
-        #     cv_img = self.bridge.imgmsg_to_cv2(
-        #         ros_img, desired_encoding="bgr8")
-        #     rospy.logdebug("ROS Image converted for processing")
-        # except CvBridgeError as e:
-        #     rospy.loginfo("Failed to convert image %s", str(e))
-        img = np.ndarray((ros_img.height, ros_img.width, 3), 'B', ros_img.data, 0)
-        cv_img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-
-        if cv_img is not None:
-            boxes, confs, clss = self.trt_yolo.detect(cv_img, self.conf_th, self.batch_size)
-
-            cv_img = self.vis.draw_bboxes(cv_img, boxes, confs, clss)
-
-            toc = time.time()
-            fps = 1.0 / (toc - tic)
-            self.avg_fps = self.avg_fps*(self.iter-1)/self.iter + fps/self.iter
-            print('fps:', self.avg_fps)
-
-
-            self.publisher(boxes, confs, clss)
-
-            if self.show_img:
-                cv_img = show_fps(cv_img, fps)
-                cv2.imshow("YOLOv3 DETECTION RESULTS", cv_img)
-                cv2.waitKey(1)
-
-        # converts back to ros_img type for publishing
-        mask_msg = Image()
-        mask_msg.height = ros_img.height
-        mask_msg.width = ros_img.width
-        mask_msg.encoding = 'bgr8'
-        mask_msg.is_bigendian = 0
-        mask_msg.step = mask_msg.width * 3 # 3 bytes for each pixel
-        mask_msg.data = np.reshape(cv_img, (ros_img.height * ros_img.width * 3,)).tolist()
-        self.detection_image_publisher.publish(mask_msg)
-        # try:
-        #     overlay_img = self.bridge.cv2_to_imgmsg(
-        #         cv_img, encoding="bgr8")
-        #     rospy.logdebug("CV Image converted for publishing")
-        #     self.detection_image_publisher.publish(overlay_img)
-        # except CvBridgeError as e:
-        #     rospy.loginfo("Failed to convert image %s", str(e))
+    def start_yolo(self, req):
+        self.run_yolo = True
+        response = SetBoolResponse()
+        response.success = True
+        return response
 
     def publisher(self, boxes, confs, clss):
         """ Publishes to detector_msgs
@@ -172,32 +135,94 @@ class yolo(object):
         detection2d.header.stamp = rospy.Time.now()
         
         self.object_publisher.publish(len(boxes))
-
+        
+        mask = np.zeros((270, 480), dtype='uint8')
+        
         for i in range(len(boxes)):
             # boxes : xmin, ymin, xmax, ymax
-            for _ in boxes:
-                detection.header.stamp = rospy.Time.now()
-                detection.header.frame_id = "camera" # change accordingly
-                detection.results.id = clss[i]
-                detection.results.score = confs[i]
+            # for _ in boxes:
+            detection.header.stamp = rospy.Time.now()
+            detection.header.frame_id = "camera" # change accordingly
+            detection.results.id = int(clss[i])
+            detection.results.score = confs[i]
 
-                detection.bbox.center.x = boxes[i][0] + (boxes[i][2] - boxes[i][0])/2
-                detection.bbox.center.y = boxes[i][1] + (boxes[i][3] - boxes[i][1])/2
-                detection.bbox.center.theta = 0.0  # change if required
+            detection.bbox.center.x = boxes[i][0] + (boxes[i][2] - boxes[i][0])/2
+            detection.bbox.center.y = boxes[i][1] + (boxes[i][3] - boxes[i][1])/2
+            detection.bbox.center.theta = 0.0  # change if required
 
-                detection.bbox.size_x = abs(boxes[i][0] - boxes[i][2])
-                detection.bbox.size_y = abs(boxes[i][1] - boxes[i][3])
+            detection.bbox.size_x = abs(boxes[i][0] - boxes[i][2])
+            detection.bbox.size_y = abs(boxes[i][1] - boxes[i][3])
+
+            if ((detection.results.id == 4) and (detection.results.score > 0.2)) \
+                or ((detection.results.id == 0) and (detection.results.score > 0.2)):  # Backpack or Survivor
+                mask[boxes[i][1]:boxes[i][3], boxes[i][0]:boxes[i][2]] = 255
 
             detection2d.detections.append(detection)
         
         self.bounding_boxes_publisher.publish(detection2d)
+        # publish mask msg
+        mask_msg = Image()
+        mask_msg.height = 270
+        mask_msg.width = 480
+        mask_msg.encoding = 'mono8'
+        mask_msg.is_bigendian = 0
+        mask_msg.step = mask_msg.width # 1 byte for each pixel
+        mask_msg.data = np.reshape(mask, (mask_msg.height * mask_msg.width,)).tolist()
+        self.mask_publisher.publish(mask_msg)
 
+    def run(self):
+        while not rospy.is_shutdown():
+            if (self.run_yolo == True):
+                if len(self.color_queue) > 0:
+                    ros_img = self.color_queue[0]
+                    self.color_queue.pop()
+                    """Continuously capture images from camera and do object detection """
+                    tic = time.time()
+                    self.iter = self.iter + 1 
+
+                    # converts from ros_img to cv_img for processing
+                    img = np.ndarray((ros_img.height, ros_img.width, 3), 'B', ros_img.data, 0)
+                    cv_img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+                    if cv_img is not None:
+                        boxes, confs, clss = self.trt_yolo.detect(cv_img, self.conf_th, self.batch_size)
+
+                        cv_img = self.vis.draw_bboxes(cv_img, boxes, confs, clss)
+
+                        toc = time.time()
+                        fps = 1.0 / (toc - tic)
+                        self.avg_fps = self.avg_fps*(self.iter-1)/self.iter + fps/self.iter
+                        # print('fps:', self.avg_fps)
+
+
+                        self.publisher(boxes, confs, clss)
+
+                        if self.show_img:
+                            # cv_img = show_fps(cv_img, fps)
+                            # cv2.imshow("YOLOv3 DETECTION RESULTS", cv_img)
+                            # cv2.waitKey(1)
+
+                            # converts back to ros_img type for publishing
+                            img_with_bb_msg = Image()
+                            img_with_bb_msg.height = ros_img.height
+                            img_with_bb_msg.width = ros_img.width
+                            img_with_bb_msg.encoding = 'bgr8'
+                            img_with_bb_msg.is_bigendian = 0
+                            img_with_bb_msg.step = img_with_bb_msg.width * 3 # 3 bytes for each pixel
+                            img_with_bb_msg.data = np.reshape(cv_img, (ros_img.height * ros_img.width * 3,)).tolist()
+                            self.detection_image_publisher.publish(img_with_bb_msg)
+
+                    self.run_yolo = False
+
+            rospy.sleep(0.001)
+            # rospy.sleep(0.5)
 
 def main():
     rospy.init_node('yolo_detection', anonymous=True)
     yolo_ = yolo()
     try:
-        rospy.spin()
+        yolo_.run()
+        
     except KeyboardInterrupt:
         del yolo_
         rospy.on_shutdown(yolo_.clean_up())

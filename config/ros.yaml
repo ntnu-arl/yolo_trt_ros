@@ -15,4 +15,4 @@ publishers:
     topic: /detection_image
 
 image_view:
-  enable_opencv: false
+  enable_opencv: true #false
