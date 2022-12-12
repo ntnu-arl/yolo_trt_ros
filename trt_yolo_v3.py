@@ -154,7 +154,7 @@ class yolo(object):
             detection.bbox.size_y = abs(boxes[i][1] - boxes[i][3])
 
             if ((detection.results.id == 4) and (detection.results.score > 0.2)) \
-                or ((detection.results.id == 0) and (detection.results.score > 0.2)):  # Backpack or Survivor
+                or ((detection.results.id == 0) and (detection.results.score > 0.35)):  # Backpack or Survivor
                 mask[boxes[i][1]:boxes[i][3], boxes[i][0]:boxes[i][2]] = 255
 
             detection2d.detections.append(detection)
